@@ -1,128 +1,109 @@
-# Proxmox Connection Variables
-variable "proxmox_api_url" {
-  description = "Proxmox API URL"
+# Proxmox Provider Variables
+variable "proxmox_endpoint" {
+  description = "Proxmox API endpoint"
   type        = string
-  default     = "https://192.168.1.100:8006/api2/json"
+  default     = "https://proxmox.example.com:8006"
 }
 
-variable "proxmox_user" {
-  description = "Proxmox API user"
+variable "proxmox_username" {
+  description = "Proxmox username"
   type        = string
-  default     = "terraform@pve"
+  default     = "root@pam"
 }
 
 variable "proxmox_password" {
-  description = "Proxmox API password"
+  description = "Proxmox password"
   type        = string
   sensitive   = true
 }
 
-variable "proxmox_tls_insecure" {
-  description = "Disable TLS verification"
+variable "proxmox_insecure" {
+  description = "Skip TLS verification"
   type        = bool
   default     = false
 }
 
-# LXC Container Variables
-variable "target_node" {
-  description = "Target Proxmox node"
+variable "proxmox_ssh_username" {
+  description = "SSH username for Proxmox host"
+  type        = string
+  default     = "root"
+}
+
+variable "proxmox_node" {
+  description = "Proxmox node name"
   type        = string
   default     = "pve"
 }
 
-variable "lxc_template" {
-  description = "LXC template storage location"
-  type        = string
-  default     = "local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
-}
-
-variable "lxc_storage" {
-  description = "Storage for LXC rootfs"
+variable "proxmox_datastore" {
+  description = "Proxmox storage location"
   type        = string
   default     = "local-lvm"
 }
 
-variable "lxc_hostname" {
+# MinIO Container Variables
+variable "minio_vmid" {
+  description = "VM ID for MinIO container"
+  type        = number
+  default     = 200
+}
+
+variable "minio_hostname" {
   description = "Hostname for MinIO container"
   type        = string
   default     = "minio"
 }
 
-variable "lxc_cores" {
-  description = "Number of CPU cores"
-  type        = number
-  default     = 2
-}
-
-variable "lxc_memory" {
-  description = "Memory in MB"
-  type        = number
-  default     = 2048
-}
-
-variable "lxc_disk_size" {
-  description = "Root disk size"
+variable "minio_ip_address" {
+  description = "Static IP address for MinIO (CIDR notation)"
   type        = string
-  default     = "20G"
+  default     = "192.168.1.200/24"
 }
 
-variable "lxc_ip_address" {
-  description = "Static IP address for MinIO"
-  type        = string
-  default     = "192.168.1.100/24"
-}
-
-variable "lxc_gateway" {
-  description = "Gateway IP"
+variable "minio_gateway" {
+  description = "Gateway IP address"
   type        = string
   default     = "192.168.1.1"
 }
 
-variable "lxc_nameserver" {
-  description = "DNS nameserver"
-  type        = string
-  default     = "8.8.8.8"
+variable "dns_servers" {
+  description = "DNS servers"
+  type        = list(string)
+  default     = ["8.8.8.8", "8.8.4.4"]
 }
 
-variable "lxc_bridge" {
+variable "network_bridge" {
   description = "Network bridge"
   type        = string
   default     = "vmbr0"
 }
 
-# MinIO Variables
-variable "minio_root_user" {
-  description = "MinIO root username"
-  type        = string
-  default     = "admin"
+variable "ssh_public_keys" {
+  description = "SSH public keys for root user"
+  type        = list(string)
+  default     = []
 }
 
-variable "minio_root_password" {
-  description = "MinIO root password (min 8 chars)"
+variable "root_password" {
+  description = "Root password for the container"
   type        = string
   sensitive   = true
 }
 
-variable "minio_console_port" {
-  description = "MinIO console port"
+variable "minio_disk_size" {
+  description = "Disk size for MinIO container in GB"
   type        = number
-  default     = 9001
+  default     = 50
 }
 
-variable "minio_api_port" {
-  description = "MinIO API port"
+variable "minio_cpu_cores" {
+  description = "Number of CPU cores"
   type        = number
-  default     = 9000
+  default     = 2
 }
 
-variable "minio_bucket_name" {
-  description = "Bucket name for Terraform state"
-  type        = string
-  default     = "terraform-state"
-}
-
-variable "ssh_public_key" {
-  description = "SSH public key for container access"
-  type        = string
-  default     = ""
+variable "minio_memory" {
+  description = "Memory in MB"
+  type        = number
+  default     = 2048
 }

@@ -1,37 +1,28 @@
 # Proxmox Configuration
-proxmox_api_url      = "https://your-proxmox-host:8006/api2/json"
-proxmox_user         = "root@pam"
+proxmox_endpoint     = "https://192.168.1.100:8006"
+proxmox_username     = "root@pam"
 proxmox_password     = "your-proxmox-password"
-proxmox_tls_insecure = true
+proxmox_insecure     = true  # Set to false in production with valid SSL
+proxmox_ssh_username = "root"
+proxmox_node         = "pve"
+proxmox_datastore    = "local-lvm"
 
-# Target Node
-target_node = "pve"
+# MinIO Container Configuration
+minio_vmid       = 200
+minio_hostname   = "minio"
+minio_ip_address = "192.168.1.200/24"
+minio_gateway    = "192.168.1.1"
+dns_servers      = ["8.8.8.8", "1.1.1.1"]
+network_bridge   = "vmbr0"
 
-# LXC Template (Download Ubuntu 22.04 template first)
-# On Proxmox: pveam update && pveam download local ubuntu-22.04-standard_22.04-1_amd64.tar.zst
-lxc_template = "local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
+# SSH Keys (add your public key here)
+ssh_public_keys = [
+  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC... your-key-here"
+]
 
-# LXC Storage
-lxc_storage = "local-lvm"
+root_password = "secure-root-password"
 
-# Network Configuration
-lxc_ip_address = "192.168.1.100/24"
-lxc_gateway    = "192.168.1.1"
-lxc_nameserver = "8.8.8.8"
-lxc_bridge     = "vmbr0"
-
-# Container Resources
-lxc_hostname = "minio"
-lxc_cores    = 2
-lxc_memory   = 2048
-lxc_disk_size = "20G"
-
-# MinIO Configuration
-minio_root_user     = "admin"
-minio_root_password = "YourSecurePassword123!"  # Minimum 8 characters
-minio_bucket_name   = "terraform-state"
-minio_api_port      = 9000
-minio_console_port  = 9001
-
-# SSH Public Key (optional, for password-less access)
-# ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2E... your-key-here"
+# Resources
+minio_disk_size  = 50    # GB
+minio_cpu_cores  = 2
+minio_memory     = 2048  # MB

@@ -1,93 +1,96 @@
-# Generate random password if not provided
-resource "random_password" "minio_password" {
-  count   = var.minio_root_password == "" ? 1 : 0
-  length  = 16
-  special = true
+# Download Debian LXC template if not exists
+resource "proxmox_virtual_environment_download_file" "debian_container_template" {
+  content_type = "vztmpl"
+  datastore_id = var.proxmox_datastore
+  node_name    = var.proxmox_node
+
+  url = "http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst"
 }
 
-locals {
-  minio_password = var.minio_root_password != "" ? var.minio_root_password : random_password.minio_password[0].result
-  minio_ip       = split("/", var.lxc_ip_address)[0]
-}
+# Create LXC container for MinIO
+resource "proxmox_virtual_environment_container" "minio_container" {
+  description = "MinIO S3-compatible storage server"
+  node_name   = var.proxmox_node
+  vm_id       = var.minio_vmid
 
-# MinIO LXC Container
-resource "proxmox_lxc" "minio" {
-  target_node  = var.target_node
-  hostname     = var.lxc_hostname
-  ostemplate   = var.lxc_template
-  unprivileged = true
-  onboot       = true
-  start        = true
+  initialization {
+    hostname = var.minio_hostname
 
-  cores  = var.lxc_cores
-  memory = var.lxc_memory
+    ip_config {
+      ipv4 {
+        address = var.minio_ip_address
+        gateway = var.minio_gateway
+      }
+    }
 
-  rootfs {
-    storage = var.lxc_storage
-    size    = var.lxc_disk_size
+    dns {
+      servers = var.dns_servers
+    }
+
+    user_account {
+      keys     = var.ssh_public_keys
+      password = var.root_password
+    }
   }
 
-  network {
+  network_interface {
     name   = "eth0"
-    bridge = var.lxc_bridge
-    ip     = var.lxc_ip_address
-    gw     = var.lxc_gateway
+    bridge = var.network_bridge
   }
 
-  nameserver = var.lxc_nameserver
-  searchdomain = "local"
+  operating_system {
+    template_file_id = proxmox_virtual_environment_download_file.debian_container_template.id
+    type             = "debian"
+  }
 
-  ssh_public_keys = var.ssh_public_key != "" ? var.ssh_public_key : null
+  disk {
+    datastore_id = var.proxmox_datastore
+    size         = var.minio_disk_size
+  }
+
+  cpu {
+    cores = var.minio_cpu_cores
+  }
+
+  memory {
+    dedicated = var.minio_memory
+  }
 
   features {
     nesting = true
   }
 
-  lifecycle {
-    ignore_changes = [
-      network,
-      mountpoint
-    ]
-  }
-}
+  start_on_boot = true
+  started       = true
 
-# Wait for container to be ready
-resource "null_resource" "wait_for_container" {
-  depends_on = [proxmox_lxc.minio]
-
+  # Wait for container to be ready
   provisioner "local-exec" {
     command = "sleep 30"
   }
+
+  # Trigger Ansible provisioning
+  provisioner "local-exec" {
+    command = "ansible-playbook -i '${var.minio_ip_address},' -u root ansible/minio-playbook.yml"
+  }
 }
 
-# Setup MinIO via SSH
-resource "null_resource" "setup_minio" {
-  depends_on = [null_resource.wait_for_container]
+# Output important information
+output "minio_container_id" {
+  value       = proxmox_virtual_environment_container.minio_container.vm_id
+  description = "The ID of the MinIO container"
+}
 
-  connection {
-    type        = "ssh"
-    host        = local.minio_ip
-    user        = "root"
-    private_key = file("~/.ssh/id_rsa")
-  }
+output "minio_ip_address" {
+  value       = var.minio_ip_address
+  description = "IP address of the MinIO server"
+}
 
-  # Upload setup script
-  provisioner "file" {
-    content = templatefile("${path.module}/scripts/setup-minio.sh", {
-      minio_root_user     = var.minio_root_user
-      minio_root_password = local.minio_password
-      minio_api_port      = var.minio_api_port
-      minio_console_port  = var.minio_console_port
-      minio_bucket_name   = var.minio_bucket_name
-    })
-    destination = "/tmp/setup-minio.sh"
-  }
+output "minio_api_endpoint" {
+  value       = "http://${var.minio_ip_address}:9000"
+  description = "MinIO API endpoint"
+}
 
-  # Execute setup script
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/setup-minio.sh",
-      "/tmp/setup-minio.sh"
-    ]
-  }
+output "minio_console_url" {
+  value       = "http://${var.minio_ip_address}:9001"
+  description = "MinIO Console URL"
 }
