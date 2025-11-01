@@ -1,0 +1,27 @@
+# Proxmox Configuration
+proxmox_endpoint     = "https://your-proxmox-host:8006"
+proxmox_username     = "root@pam"
+proxmox_password     = "your-proxmox-password"
+proxmox_insecure     = true  # Set to false in production with valid SSL
+proxmox_ssh_username = "root"
+proxmox_node         = "pve"  # Your Proxmox node name
+
+# MinIO Container Configuration
+minio_vmid           = 200
+minio_hostname       = "minio"
+minio_cores          = 2
+minio_memory         = 2048
+minio_swap           = 512
+minio_rootfs_size    = "8G"
+minio_storage_pool   = "local-lvm"
+
+# Network Configuration
+network_bridge       = "vmbr0"
+minio_ip_address     = "192.168.1.100/24"  # Adjust to your network
+network_gateway      = "192.168.1.1"        # Your gateway
+dns_server           = "8.8.8.8"
+
+# Sudo User Configuration
+sudo_username        = "deploy"
+sudo_password        = "your-secure-password"  # Change this!
+ssh_public_key       = "ssh-rsa AAAAB3... your-key-here"  # Your SSH public key
