@@ -1,0 +1,71 @@
+# Proxmox Connection Settings
+# Get these from Proxmox UI: Datacenter -> API Tokens
+proxmox_api_url          = "https://your-proxmox-host:8006/api2/json"
+proxmox_api_token_id     = "terraform@pve!terraform-token"
+proxmox_api_token_secret = "your-secret-token-here"
+proxmox_insecure         = true  # Set to false in production with valid SSL certs
+
+# Proxmox Node Configuration
+proxmox_node = "pve"  # Your Proxmox node name
+
+# Network Configuration
+network_bridge = "vmbr0"         # Network bridge name
+network_vlan   = null            # VLAN tag (null for no VLAN)
+gateway        = "192.168.1.1"   # Network gateway
+nameserver     = "8.8.8.8"       # DNS server
+
+# Storage Configuration
+datastore_id = "local-lvm"  # Storage pool for VM/LXC disks
+
+# SSH Public Keys
+# Add your SSH public key(s) here for access to VMs/containers
+ssh_public_keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... your-key-here"
+]
+
+# ============================================
+# MinIO LXC Container Configuration
+# ============================================
+minio_container_id = 200
+minio_hostname     = "minio"
+minio_ip_address   = "192.168.1.200/24"  # CIDR notation
+
+# MinIO Resources
+minio_cpu_cores = 2      # Number of CPU cores
+minio_memory    = 4096   # Memory in MB
+minio_swap      = 512    # Swap in MB
+minio_disk_size = "20"   # Disk size in GB
+
+# ============================================
+# Dev Lab VM Configuration
+# ============================================
+devlab_vm_id     = 100
+devlab_hostname  = "devlab"
+devlab_ip_address = "192.168.1.100/24"  # CIDR notation
+
+# Dev Lab Resources
+devlab_cpu_cores   = 4      # Number of CPU cores
+devlab_cpu_sockets = 1      # Number of CPU sockets
+devlab_memory      = 8192   # Memory in MB
+devlab_disk_size   = "50G"  # Disk size (e.g., 50G, 100G)
+
+# ============================================
+# Templates
+# ============================================
+# LXC template location in Proxmox storage
+# Download from: http://download.proxmox.com/images/system/
+lxc_template = "local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst"
+
+# VM template ID (must exist in Proxmox)
+# Create a template VM first and note its ID
+vm_template_id = 9000
+
+# ============================================
+# Notes:
+# ============================================
+# 1. IP addresses must be in CIDR notation (e.g., 192.168.1.100/24)
+# 2. Ensure the template ID exists before running terraform apply
+# 3. Adjust resource allocations based on your Proxmox host capacity
+# 4. For LXC templates, download from Proxmox web UI or CLI first
+# 5. SSH keys are required for passwordless access
+# 6. VM/Container IDs must be unique in your Proxmox cluster
