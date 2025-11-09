@@ -1,0 +1,31 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install base packages
+  apt:
+    name: "{{ base_packages }}"
+    state: present
+
+- name: Add NodeSource repo
+  shell: curl -fsSL https://deb.nodesource.com/setup_{{ node_major_version }}.x | bash -
+  args:
+    warn: false
+
+- name: Install nodejs
+  apt:
+    name: nodejs
+    state: present
+
+- name: Install yarn (optional)
+  npm:
+    name: yarn
+    global: yes
+  when: install_yarn
+
+- name: Show installed Node version
+  command: node -v
+  register: node_v
+
+- debug:
+    msg: "Installed Node.js version: {{ node_v.stdout }}"
