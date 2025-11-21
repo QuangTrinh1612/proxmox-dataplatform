@@ -31,7 +31,7 @@ module "devlab_vm" {
 
   vm_id         = var.devlab_vm_id
   vm_name       = var.devlab_hostname
-  vm_description = "Development Lab VM with Spark"
+  vm_description = "Development Lab VM"
   
   vm_username = var.devlab_vm_username
   vm_password = var.devlab_vm_password
@@ -53,5 +53,20 @@ module "devlab_vm" {
   
   start_on_boot = true
   
-  tags = ["devlab", "spark", "dev"]
+  tags = ["devlab", "dev"]
+}
+
+// Apply Module Ansible to configure the VM after creation
+resource "null_resource" "ansible_install_minio" {
+  depends_on = [module.devlab_vm]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      ansible-playbook \
+        -i ${var.devlab_ip_address}, \
+        -u ${var.devlab_vm_username} \
+        --ask-pass \
+        ../../../ansible/install_minio.yml
+    EOT
+  }
 }

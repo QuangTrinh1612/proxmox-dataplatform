@@ -1,4 +1,0 @@
-- hosts: proxmox_vm
-  become: yes
-  roles:
-    - nodejs

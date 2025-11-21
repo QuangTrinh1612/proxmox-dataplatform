@@ -1,0 +1,64 @@
+---
+- name: Install MinIO on Debian
+  hosts: all
+  become: true
+
+  tasks:
+
+    - name: Install dependencies
+      apt:
+        name:
+          - wget
+          - unzip
+        state: present
+        update_cache: yes
+
+    - name: Create MinIO user
+      user:
+        name: minio
+        system: yes
+        create_home: no
+        shell: /sbin/nologin
+
+    - name: Download MinIO binary
+      get_url:
+        url: "https://dl.min.io/server/minio/release/linux-amd64/minio"
+        dest: /usr/local/bin/minio
+        mode: '0755'
+
+    - name: Create MinIO directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: minio
+        group: minio
+      loop:
+        - /etc/minio
+        - /var/minio
+
+    - name: Create systemd service file
+      copy:
+        dest: /etc/systemd/system/minio.service
+        content: |
+          [Unit]
+          Description=MinIO
+          After=network.target
+
+          [Service]
+          User=minio
+          Group=minio
+          ExecStart=/usr/local/bin/minio server /var/minio --console-address ":9001"
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start MinIO
+      systemd:
+        name: minio
+        state: started
+        enabled: yes
