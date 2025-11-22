@@ -8,7 +8,7 @@ terraform {
 
 resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   name      = var.vm_template_name
-  node_name = var.pve_node_name
+  node_name = var.proxmox_node
   vm_id     = var.vm_template_id
 
   template = true
@@ -68,7 +68,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
 resource "proxmox_virtual_environment_download_file" "cloud_image" {
     content_type = "iso"
     datastore_id = "local"
-    node_name    = var.pve_node_name
+    node_name    = var.proxmox_node
     url          = var.vm_image_url
     file_name    = var.vm_image_file_name
     overwrite    = true

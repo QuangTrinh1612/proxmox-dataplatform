@@ -1,4 +1,4 @@
-variable "pve_node_name" {
+variable "proxmox_node" {
     type = string
     description = "Proxmox VE node name"
     default = "proxmox"

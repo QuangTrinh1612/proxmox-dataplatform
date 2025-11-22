@@ -2,7 +2,7 @@
 module "template_vm" {
   source = "../../modules/template"
   
-  pve_node_name = var.pve_node_name
+  proxmox_node = var.proxmox_node
 
   vm_template_id          = var.vm_template_id
   vm_template_name        = var.vm_template_name
@@ -29,7 +29,7 @@ module "template_vm" {
 module "devlab_vm" {
   source = "../../modules/vm"
   
-  pve_node_name = var.pve_node_name
+  proxmox_node = var.proxmox_node
 
   vm_id          = var.devlab_vm_id
   vm_name        = var.devlab_hostname

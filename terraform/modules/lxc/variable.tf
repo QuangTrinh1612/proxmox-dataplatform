@@ -1,6 +1,6 @@
 # LXC Module Variables
 
-variable "pve_node_name" {
+variable "proxmox_node" {
   description = "Proxmox node name"
   type        = string
 }

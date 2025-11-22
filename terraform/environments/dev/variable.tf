@@ -46,7 +46,7 @@ variable "proxmox_insecure" {
   default     = true
 }
 
-variable "pve_node_name" {
+variable "proxmox_node" {
   description = "Proxmox node name"
   type        = string
 }

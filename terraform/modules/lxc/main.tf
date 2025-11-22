@@ -9,7 +9,7 @@ terraform {
 }
 
 resource "proxmox_virtual_environment_container" "container" {
-  node_name   = var.pve_node_name
+  node_name   = var.proxmox_node
   vm_id       = var.container_id
   description = var.container_description
   tags        = var.tags
