@@ -85,13 +85,13 @@ variable "tags" {
 variable "vm_image_url" {
   description = "VM Template URL"
   type = string
-  default = "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"
+  default = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
 }
 
 variable "vm_image_file_name" {
   description = "VM Template File Name"
   type = string
-  default = "debian-12-generic-amd64.img"
+  default = "jammy-server-cloudimg-amdc64.img"
 }
 
 variable "ssh_public_key_path" {

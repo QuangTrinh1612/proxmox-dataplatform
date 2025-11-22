@@ -12,13 +12,19 @@
 
   tasks:
 
-    - name: Install dependencies
+    - name: Update and upgrade system
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+    
+    - name: Install required packages
       apt:
         name:
           - wget
-          - unzip
+          - curl
+          - ca-certificates
         state: present
-        update_cache: yes
 
     - name: Create MinIO user
       user:
@@ -97,6 +103,63 @@
         delay: 5
         timeout: 60
 
+    # ========== MinIO Client Installation ==========
+    - name: Download MinIO client (mc)
+      get_url:
+        url: https://dl.min.io/client/mc/release/linux-amd64/mc
+        dest: /usr/local/bin/mc
+        mode: '0755'
+        owner: root
+        group: root
+      register: mc_download
+    
+    - name: Verify MinIO client installation
+      command: /usr/local/bin/mc --version
+      register: mc_version
+      changed_when: false
+    
+    - name: Display mc version
+      debug:
+        msg: "MinIO client installed: {{ mc_version.stdout }}"
+    
+    - name: Create symlink for mc in user's path
+      file:
+        src: /usr/local/bin/mc
+        dest: /usr/bin/mc
+        state: link
+
+     # ========== MinIO Client Configuration ==========
+    - name: Configure mc alias for local MinIO
+      shell: |
+        /usr/local/bin/mc alias set myminio http://localhost:{{ minio_api_port }} {{ minio_root_user }} {{ minio_root_password }} --insecure
+      become_user: root
+      changed_when: false
+      environment:
+        MC_HOST_myminio: "http://{{ minio_root_user }}:{{ minio_root_password }}@localhost:{{ minio_api_port }}"
+    
+    - name: Test MinIO connectivity with mc
+      command: /usr/local/bin/mc admin info myminio --insecure
+      register: minio_info
+      changed_when: false
+      failed_when: false
+    
+    - name: Display MinIO info
+      debug:
+        msg: "{{ minio_info.stdout_lines }}"
+      when: minio_info.rc == 0
+    
+    - name: Create terraform-state bucket
+      shell: |
+        mc mb myminio/terraform-state --ignore-existing
+      become_user: root
+      changed_when: false
+    
+    - name: Create configuration bucket
+      shell: |
+        mc mb myminio/configurations --ignore-existing
+      become_user: root
+      changed_when: false
+
     - name: Display MinIO access information
       debug:
         msg:
@@ -105,3 +168,8 @@
           - "API Endpoint: http://{{ ansible_default_ipv4.address }}:{{ minio_api_port }}"
           - "Root User: {{ minio_root_user }}"
           - "Root Password: {{ minio_root_password }}"
+  
+  handlers:
+  - name: Reload systemd
+    systemd:
+      daemon_reload: yes

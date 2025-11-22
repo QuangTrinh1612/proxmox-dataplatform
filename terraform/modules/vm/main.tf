@@ -71,19 +71,19 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 }
 
-resource "proxmox_virtual_environment_file" "cloud_init_user_data" {
-  content_type = "snippets"
-  datastore_id = "local"
-  node_name    = var.proxmox_node
+# resource "proxmox_virtual_environment_file" "cloud_init_user_data" {
+#   content_type = "snippets"
+#   datastore_id = "local"
+#   node_name    = var.proxmox_node
   
-  source_raw {
-    data = templatefile("${path.module}/cloud-init.yaml", {
-      hostname   = var.vm_name
-      ssh_user   = var.vm_username
-      ssh_keys   = [trimspace(file(var.ssh_public_key_path))]
-      packages   = var.packages
-    })
+#   source_raw {
+#     data = templatefile("${path.module}/cloud-init.yaml", {
+#       hostname   = var.vm_name
+#       ssh_user   = var.vm_username
+#       ssh_keys   = [trimspace(file(var.ssh_public_key_path))]
+#       packages   = var.packages
+#     })
     
-    file_name = "${var.vm_name}-cloud-init.yaml"
-  }
-}
+#     file_name = "${var.vm_name}-cloud-init.yaml"
+#   }
+# }

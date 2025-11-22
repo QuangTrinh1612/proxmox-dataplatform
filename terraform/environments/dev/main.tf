@@ -57,7 +57,7 @@ module "devlab_vm" {
   
   start_on_boot = true
   
-  tags = ["devlab", "dev"]
+  tags = ["minio", "storage"]
 }
 
 # Extract IP address without CIDR notation

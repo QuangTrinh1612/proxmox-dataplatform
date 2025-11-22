@@ -125,7 +125,7 @@ variable "vm_template_description" {
 variable "devlab_ip_address" {
   description = "Dev Lab IP address (CIDR)"
   type        = string
-  default     = "192.168.1.100/24"
+  default     = "192.168.1.101/24"
 }
 
 variable "devlab_cpu_cores" {
