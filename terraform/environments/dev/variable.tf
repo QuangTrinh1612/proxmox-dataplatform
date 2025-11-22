@@ -163,3 +163,15 @@ variable "devlab_vm_password" {
     description = "DevLab VM User Password"
     sensitive = true
 }
+
+variable "ssh_public_key_path" {
+  description = "Path to SSH public key file"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+variable "ssh_private_key_path" {
+  description = "Path to SSH private key file for Ansible"
+  type        = string
+  default     = "~/.ssh/id_rsa"
+}

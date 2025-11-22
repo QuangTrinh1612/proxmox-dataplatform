@@ -51,6 +51,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     user_account {
       username = var.vm_username
       password = var.vm_password
+      keys     = [trimspace(file(var.ssh_public_key_path))]
     }
     # user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
   }

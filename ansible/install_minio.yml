@@ -2,6 +2,13 @@
 - name: Install MinIO on Debian
   hosts: all
   become: true
+  
+  vars:
+    minio_root_user: "admin"
+    minio_root_password: "minio123secure"  # Change this!
+    minio_data_dir: "/var/minio"
+    minio_console_port: "9001"
+    minio_api_port: "9000"
 
   tasks:
 
@@ -32,23 +39,44 @@
         state: directory
         owner: minio
         group: minio
+        mode: '0755'
       loop:
         - /etc/minio
-        - /var/minio
+        - "{{ minio_data_dir }}"
+
+    - name: Create MinIO environment file
+      copy:
+        dest: /etc/minio/minio.env
+        owner: minio
+        group: minio
+        mode: '0600'
+        content: |
+          MINIO_ROOT_USER={{ minio_root_user }}
+          MINIO_ROOT_PASSWORD={{ minio_root_password }}
+          MINIO_VOLUMES={{ minio_data_dir }}
+          MINIO_OPTS="--console-address :{{ minio_console_port }}"
 
     - name: Create systemd service file
       copy:
         dest: /etc/systemd/system/minio.service
         content: |
           [Unit]
-          Description=MinIO
-          After=network.target
+          Description=MinIO Object Storage
+          Documentation=https://min.io/docs/minio/linux/index.html
+          Wants=network-online.target
+          After=network-online.target
 
           [Service]
           User=minio
           Group=minio
-          ExecStart=/usr/local/bin/minio server /var/minio --console-address ":9001"
+          EnvironmentFile=/etc/minio/minio.env
+          ExecStart=/usr/local/bin/minio server $MINIO_VOLUMES $MINIO_OPTS
           Restart=always
+          RestartSec=5
+          LimitNOFILE=65536
+          TasksMax=infinity
+          TimeoutStopSec=infinity
+          SendSIGKILL=no
 
           [Install]
           WantedBy=multi-user.target
@@ -60,5 +88,20 @@
     - name: Enable and start MinIO
       systemd:
         name: minio
-        state: started
+        state: restarted
         enabled: yes
+
+    - name: Wait for MinIO to be ready
+      wait_for:
+        port: "{{ minio_api_port }}"
+        delay: 5
+        timeout: 60
+
+    - name: Display MinIO access information
+      debug:
+        msg:
+          - "MinIO has been installed successfully!"
+          - "Web Console: http://{{ ansible_default_ipv4.address }}:{{ minio_console_port }}"
+          - "API Endpoint: http://{{ ansible_default_ipv4.address }}:{{ minio_api_port }}"
+          - "Root User: {{ minio_root_user }}"
+          - "Root Password: {{ minio_root_password }}"

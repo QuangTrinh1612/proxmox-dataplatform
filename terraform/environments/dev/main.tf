@@ -1,11 +1,11 @@
 # VM Template
 module "template_vm" {
-  source            = "../../modules/template"
+  source = "../../modules/template"
   
-  pve_node_name     = var.pve_node_name
+  pve_node_name = var.pve_node_name
 
-  vm_template_id    = var.vm_template_id
-  vm_template_name  = var.vm_template_name
+  vm_template_id          = var.vm_template_id
+  vm_template_name        = var.vm_template_name
   vm_template_description = var.vm_template_description
   
   vm_username = var.devlab_vm_username
@@ -20,6 +20,8 @@ module "template_vm" {
   network_bridge = var.network_bridge
   network_vlan   = var.network_vlan
   
+  ssh_public_key_path = var.ssh_public_key_path
+  
   tags = ["ubuntu", "vm-template"]
 }
 
@@ -29,8 +31,8 @@ module "devlab_vm" {
   
   pve_node_name = var.pve_node_name
 
-  vm_id         = var.devlab_vm_id
-  vm_name       = var.devlab_hostname
+  vm_id          = var.devlab_vm_id
+  vm_name        = var.devlab_hostname
   vm_description = "Development Lab VM"
   
   vm_username = var.devlab_vm_username
@@ -51,22 +53,63 @@ module "devlab_vm" {
   gateway    = var.gateway
   nameserver = var.nameserver
   
+  ssh_public_key_path = var.ssh_public_key_path  # Add SSH key
+  
   start_on_boot = true
   
   tags = ["devlab", "dev"]
 }
 
-// Apply Module Ansible to configure the VM after creation
+# Extract IP address without CIDR notation
+locals {
+  devlab_ip = split("/", var.devlab_ip_address)[0]
+}
+
+# 1. Remove old SSH host key
+resource "null_resource" "remove_old_ssh_key" {
+  depends_on = [module.devlab_vm]
+
+  provisioner "local-exec" {
+    command = "ssh-keygen -R ${local.devlab_ip} 2>/dev/null || true"
+  }
+
+  triggers = {
+    vm_id = module.devlab_vm.vm_id
+  }
+}
+
+# 2. Wait for SSH to be ready
+resource "null_resource" "wait_for_ssh" {
+  depends_on = [null_resource.remove_old_ssh_key]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Waiting for SSH to be available on ${local.devlab_ip}..."
+      timeout 300 bash -c 'until ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -i ${var.ssh_private_key_path} ${var.devlab_vm_username}@${local.devlab_ip} "echo SSH is ready"; do echo "Waiting..."; sleep 5; done'
+      echo "SSH is now available!"
+    EOT
+  }
+
+  triggers = {
+    vm_id = module.devlab_vm.vm_id
+  }
+}
+
+# Apply Ansible to configure the VM after creation
 resource "null_resource" "ansible_install_minio" {
   depends_on = [module.devlab_vm]
 
   provisioner "local-exec" {
     command = <<EOT
       ansible-playbook \
-        -i ${var.devlab_ip_address}, \
+        -i ${local.devlab_ip}, \
         -u ${var.devlab_vm_username} \
-        --ask-pass \
+        --private-key ${var.ssh_private_key_path} \
         ../../../ansible/install_minio.yml
     EOT
+  }
+
+  triggers = {
+    vm_id = module.devlab_vm.vm_id
   }
 }

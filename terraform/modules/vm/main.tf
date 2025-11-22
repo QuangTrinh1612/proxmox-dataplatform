@@ -36,7 +36,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   network_device {
-    bridge = var.network_bridge
+    bridge  = var.network_bridge
     vlan_id = var.network_vlan
   }
 
@@ -57,6 +57,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
       user_account {
         username = var.vm_username
         password = var.vm_password
+        keys     = [trimspace(file(var.ssh_public_key_path))]
       }
     }
   }

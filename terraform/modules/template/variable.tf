@@ -93,3 +93,9 @@ variable "vm_image_file_name" {
   type = string
   default = "jammy-server-cloudimg-amd64.img"
 }
+
+variable "ssh_public_key_path" {
+  description = "Path to SSH public key file"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
