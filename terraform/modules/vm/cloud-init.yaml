@@ -1,0 +1,31 @@
+# modules/vm/cloud-init.yaml
+#cloud-config
+hostname: ${hostname}
+manage_etc_hosts: true
+
+users:
+  - name: ${ssh_user}
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+%{ for key in ssh_keys ~}
+      - ${key}
+%{ endfor ~}
+
+packages:
+%{ for pkg in packages ~}
+  - ${pkg}
+%{ endfor ~}
+
+package_update: true
+package_upgrade: true
+
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - echo "Cloud-init complete" > /var/log/cloud-init-done.log
+
+power_state:
+  mode: reboot
+  condition: true
